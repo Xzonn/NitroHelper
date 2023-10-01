@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 namespace NitroHelper
 {
@@ -18,8 +20,8 @@ namespace NitroHelper
 
   public class sFolder
   {
-    public List<sFile>? files;           // List of files
-    public List<sFolder>? folders;      // List of folders
+    public List<sFile> files = new List<sFile>();           // List of files
+    public List<sFolder> folders = new List<sFolder>();      // List of folders
     public string name = "";             // File name
     public ushort id = 0xFFFF;               // Internal id
 
@@ -36,9 +38,9 @@ namespace NitroHelper
 
     public FileNameTable(FileAllocationTable fatTable, Stream stream, uint offset = 0)
     {
-      List<sFolder> mains = new();
+      List<sFolder> mains = new List<sFolder>();
 
-      BinaryReader br = new(stream);
+      BinaryReader br = new BinaryReader(stream);
       stream.Position = offset;
 
       stream.Position += 6;
@@ -47,7 +49,7 @@ namespace NitroHelper
 
       for (int i = 0; i < number_directories; i++)
       {
-        sFolder main = new()
+        sFolder main = new sFolder()
         {
           mainOffset = br.ReadUInt32(),
           firstFileId = br.ReadUInt16(),
@@ -72,8 +74,7 @@ namespace NitroHelper
         {
           if (id < 0x80)  // File
           {
-            main.files ??= new List<sFile>();
-            sFile currFile = new()
+            sFile currFile = new sFile()
             {
               name = Encoding.GetEncoding("shift_jis").GetString(br.ReadBytes(id)),
               id = fileId,
@@ -86,8 +87,7 @@ namespace NitroHelper
           }
           if (id > 0x80)  // Directorio
           {
-            main.folders ??= new List<sFolder>();
-            sFolder currFolder = new()
+            sFolder currFolder = new sFolder()
             {
               name = Encoding.GetEncoding("shift_jis").GetString(br.ReadBytes(id - 0x80)),
               id = br.ReadUInt16(),
@@ -114,7 +114,7 @@ namespace NitroHelper
 
     private static sFolder ConvertListToTree(List<sFolder> tables, int folderId, string folderName)
     {
-      sFolder currFolder = new()
+      sFolder currFolder = new sFolder()
       {
         name = folderName,
         id = (ushort)folderId,
@@ -125,7 +125,7 @@ namespace NitroHelper
       {
         currFolder.folders = new List<sFolder>();
 
-        foreach (sFolder subFolder in tables[folderId & 0xFFF].folders!)
+        foreach (sFolder subFolder in tables[folderId & 0xFFF].folders)
         {
           currFolder.folders.Add(ConvertListToTree(tables, subFolder.id, subFolder.name));
         }
@@ -134,11 +134,11 @@ namespace NitroHelper
       return currFolder;
     }
 
-    public static sFile? FindFile(int id, sFolder currFolder)
+    public static sFile FindFile(int id, sFolder currFolder)
     {
       if (currFolder.id == id) // Archivos descomprimidos
       {
-        sFile folderFile = new()
+        sFile folderFile = new sFile()
         {
           name = currFolder.name,
           id = currFolder.id,
@@ -147,21 +147,20 @@ namespace NitroHelper
         return folderFile;
       }
 
-      if (currFolder.files is not null)
-        foreach (sFile archivo in currFolder.files)
-          if (archivo.id == id)
-            return archivo;
-
-
-      if (currFolder.folders is not null)
+      foreach (sFile archivo in currFolder.files)
       {
-        foreach (sFolder subFolder in currFolder.folders)
+        if (archivo.id == id)
         {
-          sFile? currFile = FindFile(id, subFolder);
-          if (currFile != null && !string.IsNullOrEmpty(currFile.name))
-          {
-            return currFile;
-          }
+          return archivo;
+        }
+      }
+
+      foreach (sFolder subFolder in currFolder.folders)
+      {
+        sFile currFile = FindFile(id, subFolder);
+        if (currFile != null && !string.IsNullOrEmpty(currFile.name))
+        {
+          return currFile;
         }
       }
 

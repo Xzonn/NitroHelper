@@ -1,4 +1,9 @@
-﻿namespace NitroHelper
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace NitroHelper
 {
   public class FileAllocationTable
   {
@@ -8,14 +13,14 @@
       public uint offset;
       public uint size;
     }
-    public List<FATItem> fatTable = new();
+    public List<FATItem> fatTable = new List<FATItem>();
     public ushort[] sortedIDs;
 
     public FileAllocationTable(string romFile, uint fatOffset, uint fatSize) : this(File.OpenRead(romFile), fatOffset, fatSize) { }
 
     public FileAllocationTable(Stream stream, uint fatOffset, uint fatSize)
     {
-      BinaryReader br = new(stream);
+      BinaryReader br = new BinaryReader(stream);
       br.BaseStream.Position = fatOffset;
 
       for (ushort i = 0; i < fatSize / 0x08; i++)
@@ -23,7 +28,7 @@
         // Number of files
         var offset = br.ReadUInt32();
         var size = br.ReadUInt32() - offset;
-        fatTable.Add(new()
+        fatTable.Add(new FATItem()
         {
           id = i,
           offset = offset,
@@ -41,7 +46,7 @@
 
     public static void WriteTo(Stream stream, sFolder root, uint FAToffset, ushort[] sortedIDs, uint offsetOv9, uint offsetOv7)
     {
-      BinaryWriter bw = new(stream);
+      BinaryWriter bw = new BinaryWriter(stream);
 
       int num_files = sortedIDs.Length;
 
@@ -58,9 +63,9 @@
       byte[] temp;
       for (int i = 0; i < num_files; i++)
       {
-        sFile? currFile = FileNameTable.FindFile(sortedIDs[i], root);
+        sFile currFile = FileNameTable.FindFile(sortedIDs[i], root);
 
-        if (currFile==null)
+        if (currFile == null)
         {
           zero_files++;
         }

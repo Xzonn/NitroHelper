@@ -1,4 +1,6 @@
-﻿namespace NitroHelper
+﻿using System;
+
+namespace NitroHelper
 {
   public static class CRC16
   {

@@ -1,4 +1,6 @@
-﻿namespace NitroHelper
+﻿using System.IO;
+
+namespace NitroHelper
 {
   public static class Overlay
   {
@@ -7,7 +9,7 @@
 
     public static sFile[] ReadBasicOverlays(Stream stream, uint offset, uint size, bool arm9, FileAllocationTable fatTable)
     {
-      BinaryReader br = new(stream);
+      BinaryReader br = new BinaryReader(stream);
       stream.Position = offset;
 
       sFile[] overlays = new sFile[size / 0x20];

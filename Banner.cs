@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Text;
 
 namespace NitroHelper
 {
@@ -21,7 +22,7 @@ namespace NitroHelper
 
     public Banner(Stream stream, uint offset = 0)
     {
-      BinaryReader br = new(stream);
+      BinaryReader br = new BinaryReader(stream);
       br.BaseStream.Position = offset;
 
       version = br.ReadUInt16();
@@ -44,7 +45,7 @@ namespace NitroHelper
 
     public void WriteTo(Stream stream, uint offset = 0)
     {
-      BinaryWriter bw = new(stream);
+      BinaryWriter bw = new BinaryWriter(stream);
       stream.Position = offset;
 
       bw.Write(version);
@@ -70,7 +71,7 @@ namespace NitroHelper
 
       // Re-caclulate CRC16
       var currentPosition = stream.Position;
-      BinaryReader br = new(stream);
+      BinaryReader br = new BinaryReader(stream);
       stream.Position = offset + 0x20;
       ushort newCRC16 = CRC16.Calculate(br.ReadBytes(0x820));
       stream.Position = offset + 0x02;
@@ -81,7 +82,7 @@ namespace NitroHelper
     private static string TitleToString(byte[] data)
     {
       string title = Encoding.Unicode.GetString(data);
-      return title[..title.IndexOf('\0')];
+      return title.Substring(0, title.IndexOf('\0'));
     }
 
     private static byte[] StringToTitle(string title)

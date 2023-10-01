@@ -1,5 +1,5 @@
-﻿using System.IO;
-using System.Reflection.PortableExecutable;
+﻿using System;
+using System.IO;
 
 namespace NitroHelper
 {
@@ -59,7 +59,7 @@ namespace NitroHelper
 
     public Header(Stream stream, uint offset = 0)
     {
-      BinaryReader br = new(stream);
+      BinaryReader br = new BinaryReader(stream);
 
       gameTitle = br.ReadChars(12);
       gameCode = br.ReadChars(4);
@@ -133,7 +133,7 @@ namespace NitroHelper
 
     public void WriteTo(Stream stream, uint offset=0)
     {
-      BinaryWriter bw = new(stream);
+      BinaryWriter bw = new BinaryWriter(stream);
       stream.Position = offset;
 
       bw.Write(gameTitle);
@@ -186,7 +186,7 @@ namespace NitroHelper
 
       // Re-caclulate CRC16
       var currentPosition = stream.Position;
-      BinaryReader br = new(stream);
+      BinaryReader br = new BinaryReader(stream);
       stream.Position = offset;
       ushort newCRC16 = CRC16.Calculate(br.ReadBytes(0x15E));
       bw.Write(newCRC16);

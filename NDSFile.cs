@@ -1,8 +1,12 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace NitroHelper
 {
-  public class NitroHelper
+  public class NDSFile
   {
     public string filePath;
     public Header header;
@@ -10,20 +14,20 @@ namespace NitroHelper
     public FileAllocationTable fatTable;
     public FileNameTable fntTable;
     public sFolder root { get => fntTable.root; }
-    public sFolder data { get => fntTable.root.folders![0]; }
-    public sFolder overlay { get => fntTable.root.folders![1]; }
+    public sFolder data { get => fntTable.root.folders[0]; }
+    public sFolder overlay { get => fntTable.root.folders[1]; }
 
-    public NitroHelper(string _filePath)
+    public NDSFile(string _filePath)
     {
       Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
       filePath = _filePath;
-      using var fileStream = File.OpenRead(filePath);
+      var fileStream = File.OpenRead(filePath);
 
       // Load header, banner, fatTable
-      header = new(fileStream);
-      banner = new(fileStream, header.bannerOffset);
-      fatTable = new(fileStream, header.FAToffset, header.FATsize);
-      fntTable = new(fatTable, fileStream, header.FNToffset);
+      header = new Header(fileStream);
+      banner = new Banner(fileStream, header.bannerOffset);
+      fatTable = new FileAllocationTable(fileStream, header.FAToffset, header.FATsize);
+      fntTable = new FileNameTable(fatTable, fileStream, header.FNToffset);
 
       // Load data and overlay
       var overlay = new sFolder()
@@ -33,10 +37,10 @@ namespace NitroHelper
       };
       overlay.files.AddRange(Overlay.ReadBasicOverlays(fileStream, header.ARM9overlayOffset, header.ARM9overlaySize, true, fatTable));
       overlay.files.AddRange(Overlay.ReadBasicOverlays(fileStream, header.ARM7overlayOffset, header.ARM7overlaySize, false, fatTable));
-      root.folders!.Add(overlay);
+      root.folders.Add(overlay);
 
       // Add root
-      root.files!.Add(new()
+      root.files.Add(new sFile()
       {
         name = "header.bin",
         offset = 0,
@@ -44,7 +48,7 @@ namespace NitroHelper
         path = "",
       });
 
-      root.files!.Add(new()
+      root.files.Add(new sFile()
       {
         name = "banner.bin",
         offset = header.bannerOffset,
@@ -52,7 +56,7 @@ namespace NitroHelper
         path = "",
       });
 
-      root.files.Add(new()
+      root.files.Add(new sFile()
       {
         name = "fnt.bin",
         offset = header.FNToffset,
@@ -60,7 +64,7 @@ namespace NitroHelper
         path = "",
       });
 
-      root.files.Add(new()
+      root.files.Add(new sFile()
       {
         name = "fat.bin",
         offset = header.FAToffset,
@@ -68,7 +72,7 @@ namespace NitroHelper
         path = "",
       });
 
-      root.files.Add(new()
+      root.files.Add(new sFile()
       {
         name = "arm9.bin",
         offset = header.ARM9romOffset,
@@ -76,7 +80,7 @@ namespace NitroHelper
         path = "",
       });
 
-      root.files.Add(new()
+      root.files.Add(new sFile()
       {
         name = "arm7.bin",
         offset = header.ARM7romOffset,
@@ -86,7 +90,7 @@ namespace NitroHelper
 
       if (header.ARM9overlaySize != 0)
       {
-        root.files.Add(new()
+        root.files.Add(new sFile()
         {
           name = "overarm9.bin",
           offset = header.ARM9overlayOffset,
@@ -97,7 +101,7 @@ namespace NitroHelper
 
       if (header.ARM7overlaySize != 0)
       {
-        root.files.Add(new()
+        root.files.Add(new sFile()
         {
           name = "overarm7.bin",
           offset = header.ARM7overlayOffset,
@@ -135,30 +139,30 @@ namespace NitroHelper
       */
 
       // Get special files
-      var systemFiles = root.files!;
-      sFile fnt = systemFiles.Find(sFile => sFile.name == "fnt.bin")!;
-      sFile fat = systemFiles.Find(sFile => sFile.name == "fat.bin")!;
-      sFile arm9 = systemFiles.Find(sFile => sFile.name == "arm9.bin")!;
-      sFile arm7 = systemFiles.Find(sFile => sFile.name == "arm7.bin")!;
-      sFile headerFile = systemFiles.Find(sFile => sFile.name == "header.bin")!;
-      sFile bannerFile = systemFiles.Find(sFile => sFile.name == "banner.bin")!;
+      var systemFiles = root.files;
+      sFile fnt = systemFiles.Find(sFile => sFile.name == "fnt.bin");
+      sFile fat = systemFiles.Find(sFile => sFile.name == "fat.bin");
+      sFile arm9 = systemFiles.Find(sFile => sFile.name == "arm9.bin");
+      sFile arm7 = systemFiles.Find(sFile => sFile.name == "arm7.bin");
+      sFile headerFile = systemFiles.Find(sFile => sFile.name == "header.bin");
+      sFile bannerFile = systemFiles.Find(sFile => sFile.name == "banner.bin");
 
       int index = systemFiles.FindIndex(sFile => sFile.name == "overarm9.bin");
-      sFile y9 = new();
-      List<sFile> ov9 = new();
+      sFile y9 = new sFile();
+      List<sFile> ov9 = new List<sFile>();
       if (index != -1)
       {
         y9 = systemFiles[index];
-        ov9 = overlay.files!.FindAll(sFile => sFile.name.StartsWith("overlay_"));
+        ov9 = overlay.files.FindAll(sFile => sFile.name.StartsWith("overlay_"));
       }
 
       index = systemFiles.FindIndex(sFile => sFile.name == "overarm7.bin");
-      List<sFile> ov7 = new();
-      sFile y7 = new();
+      sFile y7 = new sFile();
+      List<sFile> ov7 = new List<sFile>();
       if (index != -1)
       {
         y7 = systemFiles[index];
-        ov7 = overlay.files!.FindAll(sFile => sFile.name.StartsWith("overlay7_"));
+        ov7 = overlay.files.FindAll(sFile => sFile.name.StartsWith("overlay7_"));
       }
 
       if (headerFile.GetPath(filePath) != filePath)
@@ -230,7 +234,7 @@ namespace NitroHelper
       header.bannerOffset = (uint)bw.BaseStream.Position;
       if (bannerFile.GetPath(filePath) != filePath)
       {
-        banner = new(bannerFile.path, bannerFile.offset);
+        banner = new Banner(bannerFile.path, bannerFile.offset);
       }
       banner.WriteTo(outputStream, header.bannerOffset);
 
@@ -240,7 +244,7 @@ namespace NitroHelper
         if (i == 0 & fatTable.sortedIDs[i] > fatTable.sortedIDs.Length)
           continue;
 
-        sFile? currFile = FileNameTable.FindFile(fatTable.sortedIDs[i], root);
+        sFile currFile = FileNameTable.FindFile(fatTable.sortedIDs[i], root);
         if (currFile == null || currFile.name.StartsWith("overlay"))
         { // Los overlays no van en esta sección
           continue;
@@ -254,7 +258,7 @@ namespace NitroHelper
       header.size = (int)Math.Pow(2, Math.Ceiling(Math.Log(bw.BaseStream.Position, 2)));
 
       // Get Secure CRC
-      BinaryReader br = new(outputStream);
+      BinaryReader br = new BinaryReader(outputStream);
       outputStream.Position = 0x4000;
       byte[] secureArea = br.ReadBytes(0x4000);
       if (header.decrypted) { Encrypt.EncryptArm9(header.gameCode, ref secureArea); }

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Reflection.PortableExecutable;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NitroHelper
 {
@@ -290,8 +287,8 @@ namespace NitroHelper
 
       while (size > 0)
       {
-        uint a = BitConverter.ToUInt32(secureArea[(p * 4)..(p * 4 + 4)]);
-        uint b = BitConverter.ToUInt32(secureArea[(p * 4 + 4)..(p * 4 + 8)]);
+        uint a = BitConverter.ToUInt32(secureArea.Skip(p * 4).Take(p * 4 + 4).ToArray(), 0);
+        uint b = BitConverter.ToUInt32(secureArea.Skip(p * 4 + 4).Take(p * 4 + 8).ToArray(), 0);
         encrypt(card_hash, ref b, ref a);
         BitConverter.GetBytes(a).CopyTo(secureArea, p * 4);
         BitConverter.GetBytes(b).CopyTo(secureArea, p * 4 + 4);
@@ -301,8 +298,8 @@ namespace NitroHelper
 
       p = 0;
       BitConverter.GetBytes((ulong)0x6A624F7972636E65).CopyTo(secureArea, 0);
-      uint c = BitConverter.ToUInt32(secureArea[(p * 4)..(p * 4 + 4)]);
-      uint d = BitConverter.ToUInt32(secureArea[(p * 4 + 4)..(p * 4 + 8)]);
+      uint c = BitConverter.ToUInt32(secureArea.Skip(p * 4).Take(p * 4 + 4).ToArray(), 0);
+      uint d = BitConverter.ToUInt32(secureArea.Skip(p * 4 + 4).Take(p * 4 + 8).ToArray(), 0);
       encrypt(card_hash, ref d, ref c);
       init1(cardheader_gamecode);
       encrypt(card_hash, ref d, ref c);
@@ -317,7 +314,7 @@ namespace NitroHelper
     {
       for (int i = 0; i < 0x412; i++)
       {
-        card_hash[i] = BitConverter.ToUInt32(encr_data[(i * 4)..(i * 4 + 4)]);
+        card_hash[i] = BitConverter.ToUInt32(encr_data.Skip(i * 4).Take(i * 4 + 4).ToArray(), 0);
       }
       arg2[0] = cardheader_gamecode;
       arg2[1] = cardheader_gamecode >> 1;
