@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -202,6 +202,8 @@ namespace NitroHelper
       }
 
       // Write ARM7
+      header.ARM7romOffset = (uint)bw.BaseStream.Position;
+      header.ARM7size = arm7.size;
       WriteFile(bw, or, arm7);
 
       header.ARM7overlayOffset = 0;
