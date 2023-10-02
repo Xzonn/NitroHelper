@@ -7,7 +7,6 @@
     <FileVersion>0.9.1</FileVersion>
     <Copyright>Copyright © Xzonn 2018-2022</Copyright>
     <DebugType>embedded</DebugType>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>NitroHelper</Title>
     <PackageId>Xzonn.NitroHelper</PackageId>
     <Authors>Xzonn</Authors>

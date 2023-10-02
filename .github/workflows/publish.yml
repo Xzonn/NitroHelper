@@ -1,0 +1,27 @@
+name: Build on push
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Get latest tag
+        id: get-tag
+        run: |
+          $(git describe --tags) -Replace '^v', 'version=' >> $env:GITHUB_OUTPUT
+      - name: Build and publish package
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          XZ_VERSION: ${{ steps.get-tag.outputs.version }}
+        run: |
+          Get-Content -Path "NitroHelper.csproj" -Encoding UTF8 | ForEach-Object { $_ -Replace '<((?:Assembly|File)?Version)>[\d\.]+</\1>', "<`$1>$env:XZ_VERSION</`$1>" } | Out-File -FilePath "NitroHelperWithVersion.csproj" -Encoding UTF8
+          dotnet pack "NitroHelperWithVersion.csproj" -c "Release" -o ".\artifacts"
+          Remove-Item -Path "NitroHelperWithVersion.csproj"
+          dotnet nuget push ".\artifacts\*.nupkg" --api-key "$env:NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json"
