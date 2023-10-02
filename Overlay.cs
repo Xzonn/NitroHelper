@@ -29,7 +29,6 @@ namespace NitroHelper
           id = (ushort)fileId,
           offset = fatTable.fatTable[(int)fileId].offset,
           size = fatTable.fatTable[(int)fileId].size,
-          path = "",
         };
       }
 

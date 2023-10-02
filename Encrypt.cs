@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace NitroHelper
 {
+  // Credits to Dirbaio
   // https://github.com/devkitPro/ndstool/blob/a0ae6b5b7604e89dc94a2db01a97efcec41fc9fc/source/encryption.cpp
   public static class Encrypt
   {
@@ -283,8 +284,6 @@ namespace NitroHelper
 
       uint size = 0x800 - 8;
       int p = 2;
-
-      //foreach (uint a in card_hash) { Console.Write($"{a:X08} "); }
 
       while (size > 0)
       {

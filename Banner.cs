@@ -5,18 +5,18 @@ namespace NitroHelper
 {
   public class Banner
   {
-    public ushort version;      // Always 1
-    public ushort bannerCRC16;        // CRC-16 of structure, not including first 32 bytes
+    public ushort version;
+    public ushort bannerCRC16;
     public bool bannerCRC;
-    public byte[] reserved = new byte[28];     // 28 bytes
-    public byte[] tileData = new byte[512];     // 512 bytes
-    public byte[] palette = new byte[32];      // 32 bytes
-    public string japaneseTitle = "";// 256 bytes
-    public string englishTitle = ""; // 256 bytes
-    public string frenchTitle = "";  // 256 bytes
-    public string germanTitle = "";  // 256 bytes
-    public string italianTitle = ""; // 256 bytes
-    public string spanishTitle = ""; // 256 bytes
+    public byte[] reserved = new byte[28];
+    public byte[] tileData = new byte[512];
+    public byte[] palette = new byte[32];
+    public string japaneseTitle = "";
+    public string englishTitle = "";
+    public string frenchTitle = "";
+    public string germanTitle = "";
+    public string italianTitle = "";
+    public string spanishTitle = "";
 
     public Banner(string filePath, uint offset = 0) : this(true, File.OpenRead(filePath), offset) { }
 

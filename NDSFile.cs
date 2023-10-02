@@ -28,7 +28,7 @@ namespace NitroHelper
       fatTable = new FileAllocationTable(fileStream, header.FAToffset, header.FATsize);
       fntTable = new FileNameTable(fatTable, fileStream, header.FNToffset);
 
-      // Load data and overlay
+      // Load data and overlays
       var overlay = new sFolder()
       {
         name = "overlay",
@@ -44,7 +44,6 @@ namespace NitroHelper
         name = "header.bin",
         offset = 0,
         size = header.headerSize,
-        path = "",
       });
 
       root.files.Add(new sFile()
@@ -52,7 +51,6 @@ namespace NitroHelper
         name = "banner.bin",
         offset = header.bannerOffset,
         size = 0x840,
-        path = "",
       });
 
       root.files.Add(new sFile()
@@ -60,7 +58,6 @@ namespace NitroHelper
         name = "fnt.bin",
         offset = header.FNToffset,
         size = header.FNTsize,
-        path = "",
       });
 
       root.files.Add(new sFile()
@@ -68,7 +65,6 @@ namespace NitroHelper
         name = "fat.bin",
         offset = header.FAToffset,
         size = header.FATsize,
-        path = "",
       });
 
       root.files.Add(new sFile()
@@ -76,7 +72,6 @@ namespace NitroHelper
         name = "arm9.bin",
         offset = header.ARM9romOffset,
         size = header.ARM9size + (uint)(header.nitrocode ? 12 : 0),
-        path = "",
       });
 
       root.files.Add(new sFile()
@@ -84,7 +79,6 @@ namespace NitroHelper
         name = "arm7.bin",
         offset = header.ARM7romOffset,
         size = header.ARM7size,
-        path = "",
       });
 
       if (header.ARM9overlaySize != 0)
@@ -94,7 +88,6 @@ namespace NitroHelper
           name = "overarm9.bin",
           offset = header.ARM9overlayOffset,
           size = header.ARM9overlaySize,
-          path = "",
         });
       }
 
@@ -105,7 +98,6 @@ namespace NitroHelper
           name = "overarm7.bin",
           offset = header.ARM7overlayOffset,
           size = header.ARM7overlaySize,
-          path = "",
         });
       }
 
@@ -249,7 +241,8 @@ namespace NitroHelper
 
         sFile currFile = FileNameTable.FindFile(fatTable.sortedIDs[i], root);
         if (currFile == null || currFile.name.StartsWith("overlay"))
-        { // Los overlays no van en esta sección
+        {
+          // Overlays is not in this section
           continue;
         }
 
@@ -260,7 +253,7 @@ namespace NitroHelper
       header.ROMsize = (uint)bw.BaseStream.Position;
       header.size = (int)Math.Pow(2, Math.Ceiling(Math.Log(bw.BaseStream.Position, 2)));
 
-      // Get Secure CRC
+      // Re-caclulate Secure CRC16
       BinaryReader br = new BinaryReader(outputStream);
       outputStream.Position = 0x4000;
       byte[] secureArea = br.ReadBytes(0x4000);

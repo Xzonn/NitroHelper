@@ -6,11 +6,11 @@ namespace NitroHelper
 {
   public class sFile
   {
-    public uint offset;           // Offset where the files inside of the file in path
-    public uint size;             // Length of the file
-    public string name = "";             // File name
-    public ushort id = 0xFFFF;               // Internal id
-    public string path = "";             // Path where the file is
+    public uint offset;
+    public uint size;
+    public string name = "";
+    public ushort id = 0xFFFF;
+    public string path = "";
 
     public string GetPath(string @default)
     {
@@ -20,14 +20,14 @@ namespace NitroHelper
 
   public class sFolder
   {
-    public List<sFile> files = new List<sFile>();           // List of files
-    public List<sFolder> folders = new List<sFolder>();      // List of folders
-    public string name = "";             // File name
-    public ushort id = 0xFFFF;               // Internal id
+    public List<sFile> files = new List<sFile>();
+    public List<sFolder> folders = new List<sFolder>();
+    public string name = "";
+    public ushort id = 0xFFFF;
 
-    public uint mainOffset;           // OffSet de la SubTable relativa al archivo FNT
-    public ushort firstFileId;      // ID del primer archivo que contiene. Puede corresponder a uno que contenga un directorio interno
-    public ushort parentFolderId;   // ID del directorio padre de éste
+    public uint mainOffset;
+    public ushort firstFileId;
+    public ushort parentFolderId;
   }
 
   public class FileNameTable
@@ -49,7 +49,7 @@ namespace NitroHelper
       stream.Position = offset;
 
       stream.Position += 6;
-      ushort number_directories = br.ReadUInt16();  // Get the total number of directories (mainTables)
+      ushort number_directories = br.ReadUInt16();
       stream.Position = offset;
 
       for (int i = 0; i < number_directories; i++)
@@ -62,22 +62,22 @@ namespace NitroHelper
         };
 
         if (i != 0 && stream.Position > offset + mains[0].mainOffset)
-        {                                      //  Error, in some cases the number of directories is wrong
-          number_directories--;              // Found in FF Four Heroes of Light, Tetris Party deluxe
+        {
+          number_directories--;
           i--;
           continue;
         }
 
-        long currOffset = stream.Position;           // Posición guardada donde empieza la siguienta maintable
-        stream.Position = offset + main.mainOffset;      // SubTable correspondiente
+        long currOffset = stream.Position;
+        stream.Position = offset + main.mainOffset;
 
-        // SubTable
-        byte id = br.ReadByte();                            // Byte que identifica si es carpeta o archivo.
+
+        byte id = br.ReadByte();
         ushort fileId = main.firstFileId;
 
-        while (id != 0x0)   // Indicador de fin de la SubTable
+        while (id != 0x0)
         {
-          if (id < 0x80)  // File
+          if (id < 0x80)
           {
             sFile currFile = new sFile()
             {
@@ -85,12 +85,11 @@ namespace NitroHelper
               id = fileId,
               offset = fatTable.fatTable[fileId].offset,
               size = fatTable.fatTable[fileId].size,
-              path = "",
             };
             main.files.Add(currFile);
             fileId++;
           }
-          if (id > 0x80)  // Directorio
+          if (id > 0x80)
           {
             sFolder currFolder = new sFolder()
             {
@@ -128,7 +127,7 @@ namespace NitroHelper
         files = tables[folderId & 0xFFF].files
       };
 
-      if (tables[folderId & 0xFFF].folders != null) // Si tiene carpetas dentro.
+      if (tables[folderId & 0xFFF].folders != null)
       {
         currFolder.folders = new List<sFolder>();
 
@@ -143,7 +142,7 @@ namespace NitroHelper
 
     public static sFile FindFile(int id, sFolder currFolder)
     {
-      if (currFolder.id == id) // Archivos descomprimidos
+      if (currFolder.id == id)
       {
         sFile folderFile = new sFile()
         {

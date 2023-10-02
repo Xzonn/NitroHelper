@@ -27,7 +27,6 @@ namespace NitroHelper
 
       for (ushort i = 0; i < fatSize / 0x08; i++)
       {
-        // Number of files
         var offset = br.ReadUInt32();
         var size = br.ReadUInt32() - offset;
         fatTable.Add(new FATItem()
@@ -57,7 +56,6 @@ namespace NitroHelper
 
       int num_files = sortedIDs.Length;
 
-      // Set the first file offset
       uint offset = (uint)(FAToffset + num_files * 0x08);
       if ((offset % 0x200) != 0)
       {

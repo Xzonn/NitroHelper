@@ -5,6 +5,7 @@ namespace NitroHelper
 {
   public class Header
   {
+    // https://dsibrew.org/wiki/DSi_cartridge_header
     public char[] gameTitle = new char[12];
     public char[] gameCode = new char[4];
     public char[] makerCode = new char[2];
@@ -24,34 +25,34 @@ namespace NitroHelper
     public uint ARM7size;
     public uint FNToffset;
     public uint FNTsize;
-    public uint FAToffset;            // File Allocation Table offset
-    public uint FATsize;              // File Allocation Table size
-    public uint ARM9overlayOffset;      // ARM9 overlay file offset
+    public uint FAToffset;
+    public uint FATsize;
+    public uint ARM9overlayOffset;
     public uint ARM9overlaySize;
     public uint ARM7overlayOffset;
     public uint ARM7overlaySize;
-    public uint flagsRead;            // Control register flags for read
-    public uint flagsInit;            // Control register flags for init
-    public uint bannerOffset;           // Icon + titles offset
-    public ushort secureCRC16;          // Secure area CRC16 0x4000 - 0x7FFF
+    public uint flagsRead;
+    public uint flagsInit;
+    public uint bannerOffset;
+    public ushort secureCRC16;
     public ushort ROMtimeout;
     public uint ARM9autoload;
     public uint ARM7autoload;
-    public ulong secureDisable;        // Magic number for unencrypted mode
+    public ulong secureDisable;
     public uint ROMsize;
     public uint headerSize;
-    public byte[] reserved2 = new byte[56];            // 56 bytes
-    public byte[] logo = new byte[156];               // 156 bytes de un logo de nintendo usado para comprobaciones de seguridad
+    public byte[] reserved2 = new byte[56];
+    public byte[] logo = new byte[156];
     public ushort logoCRC16;
     public ushort headerCRC16;
     public bool secureCRC;
     public bool logoCRC;
     public bool headerCRC;
-    public uint debug_romOffset;      // only if debug
-    public uint debug_size;           // version with
-    public uint debug_ramAddress;     // 0 = none, SIO and 8 MB
-    public uint reserved3;            // Zero filled transfered and stored but not used
-    public byte[] reserved4 = Array.Empty<byte>();          // 0x90 bytes => Zero filled transfered but not stored in RAM
+    public uint debug_romOffset;
+    public uint debug_size;
+    public uint debug_ramAddress;
+    public uint reserved3;
+    public byte[] reserved4 = Array.Empty<byte>();
     public readonly bool nitrocode;
     public readonly bool decrypted;
 
@@ -99,7 +100,7 @@ namespace NitroHelper
       ROMsize = br.ReadUInt32();
       headerSize = br.ReadUInt32();
       reserved2 = br.ReadBytes(56);
-      logo = br.ReadBytes(156); // Logo de Nintendo utilizado para comprobaciones
+      logo = br.ReadBytes(156);
       logoCRC16 = br.ReadUInt16();
       headerCRC16 = br.ReadUInt16();
       debug_romOffset = br.ReadUInt32();
