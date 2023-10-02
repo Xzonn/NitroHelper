@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -114,7 +114,7 @@ namespace NitroHelper
     public void SaveAs(string outputPath)
     {
       /* ROM sections:
-       * 
+       *
        * Header (0x0000-0x4000)
        * ARM9 Binary
        *   |_ARM9
@@ -264,7 +264,7 @@ namespace NitroHelper
       if (header.decrypted) { Encrypt.EncryptArm9(header.gameCode, ref secureArea); }
       ushort newSecureCRC16 = CRC16.Calculate(secureArea);
       header.secureCRC16 = newSecureCRC16;
-      
+
       // Write header
       header.WriteTo(outputStream, 0);
       outputStream.Position = header.ROMsize;

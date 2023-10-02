@@ -118,6 +118,7 @@ namespace NitroHelper
       nitrocode = br.ReadUInt32() == 0xDEC00621;
 
       // ROM Type
+      // https://github.com/devkitPro/ndstool/blob/a0ae6b5b7604e89dc94a2db01a97efcec41fc9fc/source/header.cpp#L42
       br.BaseStream.Position = offset + 0x4000;
       if (br.ReadUInt64() == 0xE7FFDEFFE7FFDEFF) { decrypted = true; }
 

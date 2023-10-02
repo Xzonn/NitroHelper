@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="C:\Codes\NitroHelper\.editorconfig" />
     <None Include="README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
@@ -33,6 +34,10 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Codes\NitroHelper\.editorconfig" />
   </ItemGroup>
 
 </Project>
