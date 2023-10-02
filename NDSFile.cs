@@ -19,7 +19,6 @@ namespace NitroHelper
 
     public NDSFile(string _filePath)
     {
-      Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
       filePath = _filePath;
       var fileStream = File.OpenRead(filePath);
 

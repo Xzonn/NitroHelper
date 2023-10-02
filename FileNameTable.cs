@@ -36,10 +36,13 @@ namespace NitroHelper
 
     public FileNameTable(FileAllocationTable fatTable, string filePath, uint offset = 0) : this(true, fatTable, File.OpenRead(filePath), offset) { }
 
-    public FileNameTable(FileAllocationTable fatTable, Stream stream, uint offset = 0): this(false, fatTable, stream, offset) { }
+    public FileNameTable(FileAllocationTable fatTable, Stream stream, uint offset = 0) : this(false, fatTable, stream, offset) { }
 
     private FileNameTable(bool close, FileAllocationTable fatTable, Stream stream, uint offset = 0)
     {
+#if NET6_0_OR_GREATER
+      Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
       List<sFolder> mains = new List<sFolder>();
 
       BinaryReader br = new BinaryReader(stream);
@@ -78,7 +81,7 @@ namespace NitroHelper
           {
             sFile currFile = new sFile()
             {
-              name = Encoding.GetEncoding("shift_jis").GetString(br.ReadBytes(id)),
+              name = Encoding.GetEncoding(932).GetString(br.ReadBytes(id)),
               id = fileId,
               offset = fatTable.fatTable[fileId].offset,
               size = fatTable.fatTable[fileId].size,
@@ -91,7 +94,7 @@ namespace NitroHelper
           {
             sFolder currFolder = new sFolder()
             {
-              name = Encoding.GetEncoding("shift_jis").GetString(br.ReadBytes(id - 0x80)),
+              name = Encoding.GetEncoding(932).GetString(br.ReadBytes(id - 0x80)),
               id = br.ReadUInt16(),
             };
             main.folders.Add(currFolder);
