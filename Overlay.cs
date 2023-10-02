@@ -5,9 +5,12 @@ namespace NitroHelper
   public static class Overlay
   {
     public static sFile[] ReadBasicOverlays(string filePath, uint offset, uint size, bool arm9, FileAllocationTable fatTable)
-      => ReadBasicOverlays(File.OpenRead(filePath), offset, size, arm9, fatTable);
+      => ReadBasicOverlays(true, File.OpenRead(filePath), offset, size, arm9, fatTable);
 
     public static sFile[] ReadBasicOverlays(Stream stream, uint offset, uint size, bool arm9, FileAllocationTable fatTable)
+      => ReadBasicOverlays(false, stream, offset, size, arm9, fatTable);
+
+    private static sFile[] ReadBasicOverlays(bool close, Stream stream, uint offset, uint size, bool arm9, FileAllocationTable fatTable)
     {
       BinaryReader br = new BinaryReader(stream);
       stream.Position = offset;
@@ -29,6 +32,8 @@ namespace NitroHelper
           path = "",
         };
       }
+
+      if (close) { stream.Close(); }
 
       return overlays;
     }

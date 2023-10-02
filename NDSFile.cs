@@ -109,6 +109,8 @@ namespace NitroHelper
           path = "",
         });
       }
+
+      fileStream.Close();
     }
 
     public void SaveAs(string outputPath)
@@ -271,6 +273,8 @@ namespace NitroHelper
       header.WriteTo(outputStream, 0);
       outputStream.Position = header.ROMsize;
       bw.Write(Enumerable.Repeat((byte)0xFF, (int)(header.size - header.ROMsize)).ToArray());
+
+      originalStream.Close();
       outputStream.Close();
     }
 
@@ -283,6 +287,10 @@ namespace NitroHelper
       }
       reader.BaseStream.Position = file.offset;
       bw.Write(reader.ReadBytes((int)file.size));
+      if (reader != or)
+      {
+        reader.Close();
+      }
 
       if (writePadding)
       {

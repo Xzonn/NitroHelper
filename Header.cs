@@ -55,9 +55,11 @@ namespace NitroHelper
     public readonly bool nitrocode;
     public readonly bool decrypted;
 
-    public Header(string file, uint offset=0) : this(File.OpenRead(file), offset) { }
+    public Header(string file, uint offset = 0) : this(true, File.OpenRead(file), offset) { }
 
-    public Header(Stream stream, uint offset = 0)
+    public Header(Stream stream, uint offset = 0) : this(false, stream, offset) { }
+
+    private Header(bool close, Stream stream, uint offset = 0)
     {
       BinaryReader br = new BinaryReader(stream);
 
@@ -106,33 +108,38 @@ namespace NitroHelper
       reserved3 = br.ReadUInt32();
       reserved4 = br.ReadBytes((int)(headerSize - (stream.Position - offset)));
 
-      if (br.BaseStream.Length <= 0x4000) { return; }
+      if (br.BaseStream.Length >= 0x4000)
+      {
+        var position = br.BaseStream.Position;
+        br.BaseStream.Position = offset + 0x0;
+        headerCRC = CRC16.Calculate(br.ReadBytes(0x15E)) == headerCRC16;
+        logoCRC = CRC16.Calculate(logo) == logoCRC16;
 
-      var position = br.BaseStream.Position;
-      br.BaseStream.Position = offset + 0x0;
-      headerCRC = CRC16.Calculate(br.ReadBytes(0x15E)) == headerCRC16;
-      logoCRC = CRC16.Calculate(logo) == logoCRC16;
+        // Nitrocode?
+        br.BaseStream.Position = offset + ARM9romOffset + ARM9size;
+        nitrocode = br.ReadUInt32() == 0xDEC00621;
 
-      // Nitrocode?
-      br.BaseStream.Position = offset + ARM9romOffset + ARM9size;
-      nitrocode = br.ReadUInt32() == 0xDEC00621;
+        // ROM Type
+        // https://github.com/devkitPro/ndstool/blob/a0ae6b5b7604e89dc94a2db01a97efcec41fc9fc/source/header.cpp#L42
+        br.BaseStream.Position = offset + 0x4000;
+        if (br.ReadUInt64() == 0xE7FFDEFFE7FFDEFF) { decrypted = true; }
 
-      // ROM Type
-      // https://github.com/devkitPro/ndstool/blob/a0ae6b5b7604e89dc94a2db01a97efcec41fc9fc/source/header.cpp#L42
-      br.BaseStream.Position = offset + 0x4000;
-      if (br.ReadUInt64() == 0xE7FFDEFFE7FFDEFF) { decrypted = true; }
+        br.BaseStream.Position = offset + 0x4000;
+        byte[] secureArea = br.ReadBytes(0x4000);
+        if (decrypted) { Encrypt.EncryptArm9(gameCode, ref secureArea); }
+        secureCRC = CRC16.Calculate(secureArea) == secureCRC16;
 
-      br.BaseStream.Position = offset + 0x4000;
-      byte[] secureArea = br.ReadBytes(0x4000);
-      if (decrypted) { Encrypt.EncryptArm9(gameCode, ref secureArea); }
-      secureCRC = CRC16.Calculate(secureArea) == secureCRC16;
+        br.BaseStream.Position = position;
+      }
 
-      br.BaseStream.Position = position;
+      if (close) { stream.Close(); }
     }
 
-    public void WriteTo(string filePath, uint offset=0) => WriteTo(File.Create(filePath), offset);
+    public void WriteTo(string filePath, uint offset = 0) => WriteTo(true, File.Create(filePath), offset);
 
-    public void WriteTo(Stream stream, uint offset=0)
+    public void WriteTo(Stream stream, uint offset = 0) => WriteTo(false, stream, offset);
+
+    private void WriteTo(bool close, Stream stream, uint offset = 0)
     {
       BinaryWriter bw = new BinaryWriter(stream);
       stream.Position = offset;
@@ -192,7 +199,8 @@ namespace NitroHelper
       ushort newCRC16 = CRC16.Calculate(br.ReadBytes(0x15E));
       bw.Write(newCRC16);
       stream.Position = currentPosition;
-    }
 
+      if (close) { stream.Close(); }
+    }
   }
 }

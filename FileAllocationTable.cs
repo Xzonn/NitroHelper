@@ -16,9 +16,11 @@ namespace NitroHelper
     public List<FATItem> fatTable = new List<FATItem>();
     public ushort[] sortedIDs;
 
-    public FileAllocationTable(string romFile, uint fatOffset, uint fatSize) : this(File.OpenRead(romFile), fatOffset, fatSize) { }
+    public FileAllocationTable(string romFile, uint fatOffset, uint fatSize) : this(true, File.OpenRead(romFile), fatOffset, fatSize) { }
 
-    public FileAllocationTable(Stream stream, uint fatOffset, uint fatSize)
+    public FileAllocationTable(Stream stream, uint fatOffset, uint fatSize) : this(false, stream, fatOffset, fatSize) { }
+
+    private FileAllocationTable(bool close, Stream stream, uint fatOffset, uint fatSize)
     {
       BinaryReader br = new BinaryReader(stream);
       br.BaseStream.Position = fatOffset;
@@ -39,12 +41,17 @@ namespace NitroHelper
       var _ = fatTable.ToList();
       _.Sort(Sort);
       sortedIDs = _.Select(x => x.id).ToArray();
+
+      if (close) { stream.Close(); }
     }
 
     public static void WriteTo(string fileOut, sFolder root, uint FAToffset, ushort[] sortedIDs, uint offsetOv9, uint offsetOv7)
-      => WriteTo(File.Create(fileOut), root, FAToffset, sortedIDs, offsetOv9, offsetOv7);
+      => WriteTo(true, File.Create(fileOut), root, FAToffset, sortedIDs, offsetOv9, offsetOv7);
 
     public static void WriteTo(Stream stream, sFolder root, uint FAToffset, ushort[] sortedIDs, uint offsetOv9, uint offsetOv7)
+      => WriteTo(false, stream, root, FAToffset, sortedIDs, offsetOv9, offsetOv7);
+
+    private static void WriteTo(bool close, Stream stream, sFolder root, uint FAToffset, ushort[] sortedIDs, uint offsetOv9, uint offsetOv7)
     {
       BinaryWriter bw = new BinaryWriter(stream);
 
@@ -121,6 +128,8 @@ namespace NitroHelper
       }
 
       bw.Flush();
+
+      if (close) { stream.Close(); }
     }
 
     private static int Sort(FATItem f1, FATItem f2)

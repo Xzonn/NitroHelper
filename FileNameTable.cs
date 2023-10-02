@@ -34,9 +34,11 @@ namespace NitroHelper
   {
     public sFolder root;
 
-    public FileNameTable(FileAllocationTable fatTable, string filePath, uint offset = 0) : this(fatTable, File.OpenRead(filePath), offset) { }
+    public FileNameTable(FileAllocationTable fatTable, string filePath, uint offset = 0) : this(true, fatTable, File.OpenRead(filePath), offset) { }
 
-    public FileNameTable(FileAllocationTable fatTable, Stream stream, uint offset = 0)
+    public FileNameTable(FileAllocationTable fatTable, Stream stream, uint offset = 0): this(false, fatTable, stream, offset) { }
+
+    private FileNameTable(bool close, FileAllocationTable fatTable, Stream stream, uint offset = 0)
     {
       List<sFolder> mains = new List<sFolder>();
 
@@ -110,6 +112,8 @@ namespace NitroHelper
       };
       root.folders.Add(ConvertListToTree(mains, 0, "data"));
       root.folders[0].id = 0xFFFF;
+
+      if (close) { stream.Close(); }
     }
 
     private static sFolder ConvertListToTree(List<sFolder> tables, int folderId, string folderName)

@@ -18,9 +18,11 @@ namespace NitroHelper
     public string italianTitle = ""; // 256 bytes
     public string spanishTitle = ""; // 256 bytes
 
-    public Banner(string filePath, uint offset = 0) : this(File.OpenRead(filePath), offset) { }
+    public Banner(string filePath, uint offset = 0) : this(true, File.OpenRead(filePath), offset) { }
 
-    public Banner(Stream stream, uint offset = 0)
+    public Banner(Stream stream, uint offset = 0) : this(false, stream, offset) { }
+
+    private Banner(bool close, Stream stream, uint offset = 0)
     {
       BinaryReader br = new BinaryReader(stream);
       br.BaseStream.Position = offset;
@@ -39,11 +41,15 @@ namespace NitroHelper
 
       stream.Position = offset + 0x20;
       bannerCRC = CRC16.Calculate(br.ReadBytes(0x820)) == bannerCRC16;
+
+      if (close) { stream.Close(); }
     }
 
-    public void WriteTo(string filePath) => WriteTo(File.Create(filePath));
+    public void WriteTo(string filePath, uint offset = 0) => WriteTo(true, File.Create(filePath), offset);
 
-    public void WriteTo(Stream stream, uint offset = 0)
+    public void WriteTo(Stream stream, uint offset = 0) => WriteTo(false, stream, offset);
+
+    private void WriteTo(bool close, Stream stream, uint offset = 0)
     {
       BinaryWriter bw = new BinaryWriter(stream);
       stream.Position = offset;
@@ -77,6 +83,8 @@ namespace NitroHelper
       stream.Position = offset + 0x02;
       bw.Write(newCRC16);
       stream.Position = currentPosition;
+
+      if (close) { stream.Close(); }
     }
 
     private static string TitleToString(byte[] data)
