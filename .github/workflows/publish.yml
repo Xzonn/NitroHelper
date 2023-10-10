@@ -20,9 +20,11 @@ jobs:
         env:
           XZ_VERSION: ${{ steps.get-tag.outputs.version }}
         run: |
-          Get-Content -Path "NitroHelper.csproj" -Encoding UTF8 | ForEach-Object { $_ -Replace '<((?:Assembly|File)?Version)>[\d\.]+</\1>', "<`$1>$env:XZ_VERSION</`$1>" } | Out-File -FilePath "NitroHelperWithVersion.csproj" -Encoding UTF8
-          dotnet pack "NitroHelperWithVersion.csproj" -c "Release" -o ".\artifacts"
-          Remove-Item -Path "NitroHelperWithVersion.csproj"
+          Move-Item -Path "NitroHelper.csproj" -Destination "NitroHelper.csproj.bak"
+          Get-Content -Path "NitroHelper.csproj.bak" -Encoding UTF8 | ForEach-Object { $_ -Replace '<((?:Assembly|File)?Version)>[\d\.]+</\1>', "<`$1>$env:XZ_VERSION</`$1>" } | Out-File -FilePath "NitroHelper.csproj" -Encoding UTF8
+          dotnet pack "NitroHelper.csproj" -c "Release" -o ".\artifacts"
+          Remove-Item -Path "NitroHelper.csproj"
+          Move-Item -Path "NitroHelper.csproj.bak" -Destination "NitroHelper.csproj"
       - name: Publish package to nuget.org
         continue-on-error: true
         env:
