@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace NitroHelper
 {
@@ -13,6 +12,8 @@ namespace NitroHelper
     public Banner banner;
     public FileAllocationTable fatTable;
     public FileNameTable fntTable;
+    public OverlayTable overlay9Table;
+    public OverlayTable overlay7Table;
     public sFolder root { get => fntTable.root; }
     public sFolder data { get => fntTable.root.folders[0]; }
     public sFolder overlay { get => fntTable.root.folders[1]; }
@@ -34,8 +35,11 @@ namespace NitroHelper
         name = "overlay",
         files = new List<sFile>(),
       };
-      overlay.files.AddRange(Overlay.ReadBasicOverlays(fileStream, header.ARM9overlayOffset, header.ARM9overlaySize, true, fatTable));
-      overlay.files.AddRange(Overlay.ReadBasicOverlays(fileStream, header.ARM7overlayOffset, header.ARM7overlaySize, false, fatTable));
+      overlay9Table = new OverlayTable(fileStream, header.ARM9overlayOffset, header.ARM9overlaySize, true);
+      overlay.files.AddRange(overlay9Table.ReadBasicOverlays(fatTable));
+
+      overlay7Table = new OverlayTable(fileStream, header.ARM7overlayOffset, header.ARM7overlaySize, false);
+      overlay.files.AddRange(overlay7Table.ReadBasicOverlays(fatTable));
       root.folders.Add(overlay);
 
       // Add root
@@ -146,7 +150,17 @@ namespace NitroHelper
       if (index != -1)
       {
         y9 = systemFiles[index];
+        if (y9.GetPath(filePath) != filePath)
+        {
+          overlay9Table = new OverlayTable(y9.path, 0, y9.size, true);
+        }
         ov9 = overlay.files.FindAll(sFile => sFile.name.StartsWith("overlay_"));
+        ov9.Sort((sFile1, sFile2) => sFile1.id.CompareTo(sFile2.id));
+        foreach (var ov9File in ov9)
+        {
+          var item = overlay9Table.overlayTable.Find(_ => _.fileId == ov9File.id);
+          if (item.reserved > 0) { item.reserved = (item.reserved & 0xFF000000) + (ov9File.size & 0xFFFFFF); }
+        }
       }
 
       index = systemFiles.FindIndex(sFile => sFile.name == "overarm7.bin");
@@ -155,7 +169,17 @@ namespace NitroHelper
       if (index != -1)
       {
         y7 = systemFiles[index];
+        if (y7.GetPath(filePath) != filePath)
+        {
+          overlay9Table = new OverlayTable(y7.path, 0, y7.size, true);
+        }
         ov7 = overlay.files.FindAll(sFile => sFile.name.StartsWith("overlay7_"));
+        ov7.Sort((sFile1, sFile2) => sFile1.id.CompareTo(sFile2.id));
+        foreach (var ov7File in ov7)
+        {
+          var item = overlay7Table.overlayTable.Find(_ => _.fileId == ov7File.id);
+          if (item.reserved > 0) { item.reserved = (item.reserved & 0xFF000000) + (ov7File.size & 0xFFFFFF); }
+        }
       }
 
       if (headerFile.GetPath(filePath) != filePath)
@@ -185,7 +209,7 @@ namespace NitroHelper
         header.ARM9overlayOffset = (uint)bw.BaseStream.Position;
         header.ARM9overlaySize = y9.size;
 
-        WriteFile(bw, or, y9);
+        overlay9Table.WriteTo(outputStream, header.ARM9overlayOffset);
         fatArm9overlayOffset = (uint)bw.BaseStream.Position;
 
         foreach (var overlay in ov9)
@@ -207,7 +231,7 @@ namespace NitroHelper
         header.ARM7overlayOffset = (uint)bw.BaseStream.Position;
         header.ARM7overlaySize = y7.size;
 
-        WriteFile(bw, or, y7);
+        overlay7Table.WriteTo(outputStream, header.ARM7overlayOffset);
         fatArm7overlayOffset = (uint)bw.BaseStream.Position;
 
         foreach (var overlay in ov7)
