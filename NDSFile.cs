@@ -310,13 +310,9 @@ namespace NitroHelper
 
       if (writePadding)
       {
-        WritePadding(bw, 0x200);
+        bw.WritePadding(0x200);
       }
     }
 
-    void WritePadding(BinaryWriter bw, int paddingBase)
-    {
-      bw.Write(Enumerable.Repeat((byte)0xFF, (paddingBase - (int)bw.BaseStream.Position % paddingBase) % paddingBase).ToArray());
-    }
   }
 }

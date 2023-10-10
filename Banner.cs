@@ -66,14 +66,7 @@ namespace NitroHelper
       bw.Write(StringToTitle(italianTitle));
       bw.Write(StringToTitle(spanishTitle));
 
-      int rem = (int)stream.Position % 0x200;
-      if (rem != 0)
-      {
-        while (rem++ < 0x200)
-        {
-          bw.Write((byte)0xFF);
-        }
-      }
+      bw.WritePadding(0x200);
 
       // Re-caclulate CRC16
       var currentPosition = stream.Position;

@@ -85,6 +85,7 @@ namespace NitroHelper
         bw.Write(item.fileId);
         bw.Write(item.reserved);
       }
+      bw.WritePadding(0x200);
 
       if (close) { stream.Close(); }
     }
