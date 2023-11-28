@@ -44,13 +44,13 @@ namespace NitroHelper
       if (close) { stream.Close(); }
     }
 
-    public static void WriteTo(string fileOut, sFolder root, uint FAToffset, ushort[] sortedIDs, uint offsetOv9, uint offsetOv7)
-      => WriteTo(true, File.Create(fileOut), root, FAToffset, sortedIDs, offsetOv9, offsetOv7);
+    public static void WriteTo(string fileOut, sFolder root, uint FAToffset, ushort[] sortedIDs, uint bannerSize, uint offsetOv9, uint offsetOv7)
+      => WriteTo(true, File.Create(fileOut), root, FAToffset, sortedIDs, bannerSize, offsetOv9, offsetOv7);
 
-    public static void WriteTo(Stream stream, sFolder root, uint FAToffset, ushort[] sortedIDs, uint offsetOv9, uint offsetOv7)
-      => WriteTo(false, stream, root, FAToffset, sortedIDs, offsetOv9, offsetOv7);
+    public static void WriteTo(Stream stream, sFolder root, uint FAToffset, ushort[] sortedIDs, uint bannerSize, uint offsetOv9, uint offsetOv7)
+      => WriteTo(false, stream, root, FAToffset, sortedIDs, bannerSize, offsetOv9, offsetOv7);
 
-    private static void WriteTo(bool close, Stream stream, sFolder root, uint FAToffset, ushort[] sortedIDs, uint offsetOv9, uint offsetOv7)
+    private static void WriteTo(bool close, Stream stream, sFolder root, uint FAToffset, ushort[] sortedIDs, uint bannerSize, uint offsetOv9, uint offsetOv7)
     {
       BinaryWriter bw = new BinaryWriter(stream);
 
@@ -61,7 +61,14 @@ namespace NitroHelper
       {
         offset += 0x200 - (offset % 0x200);
       }
-      offset += 0xA00;
+      if (bannerSize > 0)
+      {
+        offset += bannerSize + 0x200 - (bannerSize % 0x200);
+      }
+      else
+      {
+        offset += 0x0a00;
+      }
 
       byte[] buffer = new byte[num_files * 8];
       int zero_files = 0;
@@ -115,16 +122,7 @@ namespace NitroHelper
         Array.Copy(temp, 0, buffer, sortedIDs[i] * 8 + 4, 4);
       }
 
-      int rem = (int)bw.BaseStream.Position % 0x200;
-      if (rem != 0)
-      {
-        while (rem < 0x200)
-        {
-          bw.Write((byte)0xFF);
-          rem++;
-        }
-      }
-
+      bw.WritePadding(0x200);
       bw.Flush();
 
       if (close) { stream.Close(); }

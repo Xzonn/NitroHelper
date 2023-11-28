@@ -5,7 +5,7 @@ namespace NitroHelper
 {
   // Credits to Dirbaio
   // https://github.com/devkitPro/ndstool/blob/a0ae6b5b7604e89dc94a2db01a97efcec41fc9fc/source/encryption.cpp
-  public static class Encrypt
+  public static class Arm9Encryptor
   {
     private static byte[] encr_data =
     {
@@ -272,7 +272,7 @@ namespace NitroHelper
       0x96, 0xE7, 0xC4, 0x18, 0x5F, 0xAD, 0xF5, 0x19,
     };
 
-    public static void EncryptArm9(char[] gameCode, ref byte[] secureArea)
+    public static void Encrypt(char[] gameCode, ref byte[] secureArea)
     {
       uint cardheader_gamecode = (uint)(gameCode[0] + (gameCode[1] << 8) + (gameCode[2] << 16) + (gameCode[3] << 24));
 

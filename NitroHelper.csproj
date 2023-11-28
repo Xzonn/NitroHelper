@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFrameworks>net47;net6.0</TargetFrameworks>
-    <Version>0.10.0</Version>
-    <AssemblyVersion>0.10.0</AssemblyVersion>
-    <FileVersion>0.10.0</FileVersion>
+    <Version>0.12.0</Version>
+    <AssemblyVersion>0.12.0</AssemblyVersion>
+    <FileVersion>0.12.0</FileVersion>
     <Copyright>Copyright © Xzonn 2023</Copyright>
     <DebugType>embedded</DebugType>
     <Title>NitroHelper</Title>
@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="C:\Codes\NitroHelper\.editorconfig" />
+    <None Include=".editorconfig" />
     <None Include="README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
@@ -45,11 +45,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EditorConfigFiles Remove="C:\Codes\NitroHelper\.editorconfig" />
+    <EditorConfigFiles Remove=".editorconfig" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Xzonn.BlzHelper" Version="0.9.0" />
   </ItemGroup>
 
 </Project>

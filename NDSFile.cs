@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace NitroHelper
 {
@@ -17,6 +18,7 @@ namespace NitroHelper
     public sFolder root { get => fntTable.root; }
     public sFolder data { get => fntTable.root.folders[0]; }
     public sFolder overlay { get => fntTable.root.folders[1]; }
+    public TWL twl;
 
     public NDSFile(string _filePath)
     {
@@ -25,7 +27,7 @@ namespace NitroHelper
 
       // Load header, banner, fatTable
       header = new Header(fileStream);
-      banner = new Banner(fileStream, header.bannerOffset);
+      banner = new Banner(fileStream, header.bannerOffset, header.banner_size);
       fatTable = new FileAllocationTable(fileStream, header.FAToffset, header.FATsize);
       fntTable = new FileNameTable(fatTable, fileStream, header.FNToffset);
 
@@ -36,11 +38,27 @@ namespace NitroHelper
         files = new List<sFile>(),
       };
       overlay9Table = new OverlayTable(fileStream, header.ARM9overlayOffset, header.ARM9overlaySize, true);
-      overlay.files.AddRange(overlay9Table.ReadBasicOverlays(fatTable));
+      var overlay9Files = overlay9Table.ReadBasicOverlays(fatTable);
+      overlay.files.AddRange(overlay9Files);
 
       overlay7Table = new OverlayTable(fileStream, header.ARM7overlayOffset, header.ARM7overlaySize, false);
       overlay.files.AddRange(overlay7Table.ReadBasicOverlays(fatTable));
       root.folders.Add(overlay);
+
+      // Read DSi stuff
+      if (((byte)header.unitCode & 2) > 0 && (header.twlInternalFlags & 1) > 0)
+      {
+        // Read TWL rom data if the DSi ROM is valid 
+        if (header.tid_high != 0 && header.tid_high != 0xFFFFFFFF)
+        {
+          // NOTE: Some DSi Enhanced ROMs is invalid!
+          try
+          {
+            twl = new TWL(header, overlay9Files, fileStream);
+          }
+          catch { }
+        }
+      }
 
       // Add root
       root.files.Add(new sFile()
@@ -159,7 +177,8 @@ namespace NitroHelper
         foreach (var ov9File in ov9)
         {
           var item = overlay9Table.overlayTable.Find(_ => _.fileId == ov9File.id);
-          if (item.reserved > 0) { item.reserved = (item.reserved & 0xFF000000) + (ov9File.size & 0xFFFFFF); }
+          byte reservedType = (byte)((item.reserved & 0xFF000000) >> 48);
+          if (reservedType % 2 > 0) { item.reserved = (uint)(reservedType << 48) + (ov9File.size & 0xFFFFFF); }
         }
       }
 
@@ -247,30 +266,42 @@ namespace NitroHelper
 
       // Write FAT
       header.FAToffset = (uint)bw.BaseStream.Position;
-      FileAllocationTable.WriteTo(outputStream, root, header.FAToffset, fatTable.sortedIDs, fatArm9overlayOffset, fatArm7overlayOffset);
+      FileAllocationTable.WriteTo(outputStream, root, header.FAToffset, fatTable.sortedIDs, header.banner_size, fatArm9overlayOffset, fatArm7overlayOffset);
 
       // Write banner
       header.bannerOffset = (uint)bw.BaseStream.Position;
       if (bannerFile.GetPath(filePath) != filePath)
       {
-        banner = new Banner(bannerFile.path, bannerFile.offset);
+        banner = new Banner(bannerFile.path, bannerFile.offset, header.banner_size);
       }
-      banner.WriteTo(outputStream, header.bannerOffset);
+      header.banner_size = banner.WriteTo(outputStream, header.bannerOffset);
 
+      // Get overlays (all system files)
+      var ovlMaxId = overlay.files.Count - 1;
       // Write files
       for (int i = 0; i < fatTable.sortedIDs.Length; i++)
       {
-        if (i == 0 & fatTable.sortedIDs[i] > fatTable.sortedIDs.Length)
+        if (i == 0 & fatTable.sortedIDs[i] > fatTable.sortedIDs.Length) { continue; }
+        if (fatTable.sortedIDs[i] <= ovlMaxId)
+        {
+          // Exclude overlay files by ID, because some files have name with "overlay" on begin
           continue;
+        }
 
         sFile currFile = FileNameTable.FindFile(fatTable.sortedIDs[i], root);
-        if (currFile == null || currFile.name.StartsWith("overlay"))
+        if (currFile == null)
         {
           // Overlays is not in this section
           continue;
         }
 
         WriteFile(bw, or, currFile, i < fatTable.sortedIDs.Length - 1);
+      }
+
+      if (twl != null && ((byte)header.unitCode & 2) > 0)
+      {
+        twl.WriteTo(outputStream, header, out header.hmac_digest_master);
+        // TWL.UpdateHeaderSignatures(ref bw, ref header, header_file, keep_original);
       }
 
       // Update the ROM size values of the header
@@ -281,7 +312,7 @@ namespace NitroHelper
       BinaryReader br = new BinaryReader(outputStream);
       outputStream.Position = 0x4000;
       byte[] secureArea = br.ReadBytes(0x4000);
-      if (header.decrypted) { Encrypt.EncryptArm9(header.gameCode, ref secureArea); }
+      if (header.decrypted) { Arm9Encryptor.Encrypt(header.gameCode, ref secureArea); }
       ushort newSecureCRC16 = CRC16.Calculate(secureArea);
       header.secureCRC16 = newSecureCRC16;
 
@@ -289,6 +320,7 @@ namespace NitroHelper
       header.WriteTo(outputStream, 0);
       outputStream.Position = header.ROMsize;
       bw.Write(Enumerable.Repeat((byte)0xFF, (int)(header.size - header.ROMsize)).ToArray());
+
 
       originalStream.Close();
       outputStream.Close();
