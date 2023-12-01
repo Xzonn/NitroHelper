@@ -177,8 +177,8 @@ namespace NitroHelper
         foreach (var ov9File in ov9)
         {
           var item = overlay9Table.overlayTable.Find(_ => _.fileId == ov9File.id);
-          byte reservedType = (byte)((item.reserved & 0xFF000000) >> 48);
-          if (reservedType % 2 > 0) { item.reserved = (uint)(reservedType << 48) + (ov9File.size & 0xFFFFFF); }
+          byte reservedType = (byte)((item.reserved & 0xFF000000) >> 24);
+          if (reservedType % 2 > 0) { item.reserved = (uint)(reservedType << 24) + (ov9File.size & 0xFFFFFF); }
         }
       }
 
@@ -190,13 +190,15 @@ namespace NitroHelper
         y7 = systemFiles[index];
         if (y7.GetPath(filePath) != filePath)
         {
-          overlay9Table = new OverlayTable(y7.path, 0, y7.size, true);
+          overlay7Table = new OverlayTable(y7.path, 0, y7.size, true);
         }
         ov7 = overlay.files.FindAll(sFile => sFile.name.StartsWith("overlay7_"));
         ov7.Sort((sFile1, sFile2) => sFile1.id.CompareTo(sFile2.id));
         foreach (var ov7File in ov7)
         {
           var item = overlay7Table.overlayTable.Find(_ => _.fileId == ov7File.id);
+          byte reservedType = (byte)((item.reserved & 0xFF000000) >> 24);
+          if (reservedType % 2 > 0) { item.reserved = (uint)(reservedType << 24) + (ov7File.size & 0xFFFFFF); }
           if (item.reserved > 0) { item.reserved = (item.reserved & 0xFF000000) + (ov7File.size & 0xFFFFFF); }
         }
       }
