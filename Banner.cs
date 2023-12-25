@@ -172,5 +172,10 @@ namespace NitroHelper
       Encoding.Unicode.GetBytes(title).CopyTo(data, 0);
       return data;
     }
+
+    public override string ToString()
+    {
+      return $"NDS banner: japaneseTitle: {japaneseTitle.Replace("\n", "\\n")}, englishTitle: {englishTitle.Replace("\n", "\\n")}";
+    }
   }
 }

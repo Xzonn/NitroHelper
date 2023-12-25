@@ -15,6 +15,11 @@ namespace NitroHelper
       public uint staticInitialiserEndAddress;
       public uint fileId;
       public uint reserved;
+
+      public override string ToString()
+      {
+        return $"Overaly item #{overlayId,-3} (0x{overlayId:x02}): ramAddress: 0x{ramAddress:x08}, ramSize: 0x{ramSize:x08}, bssSize: 0x{bssSize:x08}, staticInitialiserStartAddress: 0x{staticInitialiserStartAddress:x08}, staticInitialiserEndAddress: 0x{staticInitialiserEndAddress:x08}, reserved: 0x{reserved:x08}";
+      }
     }
 
     public readonly bool isArm9 = false;
@@ -88,6 +93,11 @@ namespace NitroHelper
       bw.WritePadding(0x200);
 
       if (close) { stream.Close(); }
+    }
+
+    public override string ToString()
+    {
+      return $"{(isArm9 ? "ARM9" : "ARM7")} overlay table: {overlayTable.Count} entries";
     }
   }
 }

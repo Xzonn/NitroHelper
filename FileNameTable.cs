@@ -16,6 +16,11 @@ namespace NitroHelper
     {
       return string.IsNullOrEmpty(path) ? @default : path;
     }
+
+    public override string ToString()
+    {
+      return $"sFile: {name}, path: {path}";
+    }
   }
 
   public class sFolder
@@ -28,6 +33,11 @@ namespace NitroHelper
     public uint mainOffset;
     public ushort firstFileId;
     public ushort parentFolderId;
+
+    public override string ToString()
+    {
+      return $"sFolder: {name}";
+    }
   }
 
   public class FileNameTable

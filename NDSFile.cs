@@ -348,5 +348,9 @@ namespace NitroHelper
       }
     }
 
+    public override string ToString()
+    {
+      return $"NDS ROM: {new string(header.gameTitle)} ({new string(header.gameCode)})";
+    }
   }
 }

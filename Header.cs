@@ -453,5 +453,10 @@ namespace NitroHelper
 
       if (close) { stream.Close(); }
     }
+
+    public override string ToString()
+    {
+      return $"NDS header: {new string(gameTitle)} ({new string(gameCode)}), ROMsize: {ROMsize}, ARM9romOffset: 0x{ARM9romOffset:x08}, ARM9ramAddress: 0x{ARM9ramAddress:x08}, ARM9size: 0x{ARM9size:x08}, ARM7romOffset: 0x{ARM7romOffset:x08}, ARM7ramAddress: 0x{ARM7ramAddress:x08}, ARM7size: 0x{ARM7size:x08}";
+    }
   }
 }
