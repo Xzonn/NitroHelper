@@ -228,9 +228,7 @@ namespace NitroHelper
       {
         // ARM9 Overlays Tables
         header.ARM9overlayOffset = (uint)bw.BaseStream.Position;
-        header.ARM9overlaySize = y9.size;
-
-        overlay9Table.WriteTo(outputStream, header.ARM9overlayOffset);
+        header.ARM9overlaySize = overlay9Table.WriteTo(outputStream, header.ARM9overlayOffset);
         fatArm9overlayOffset = (uint)bw.BaseStream.Position;
 
         foreach (var overlay in ov9)
@@ -250,9 +248,7 @@ namespace NitroHelper
       {
         // ARM7 Overlays Tables
         header.ARM7overlayOffset = (uint)bw.BaseStream.Position;
-        header.ARM7overlaySize = y7.size;
-
-        overlay7Table.WriteTo(outputStream, header.ARM7overlayOffset);
+        header.ARM7overlaySize = overlay7Table.WriteTo(outputStream, header.ARM7overlayOffset);
         fatArm7overlayOffset = (uint)bw.BaseStream.Position;
 
         foreach (var overlay in ov7)
@@ -322,7 +318,6 @@ namespace NitroHelper
       header.WriteTo(outputStream, 0);
       outputStream.Position = header.ROMsize;
       bw.Write(Enumerable.Repeat((byte)0xFF, (int)(header.size - header.ROMsize)).ToArray());
-
 
       originalStream.Close();
       outputStream.Close();

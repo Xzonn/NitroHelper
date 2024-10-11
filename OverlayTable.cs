@@ -48,6 +48,7 @@ namespace NitroHelper
           fileId = br.ReadUInt32(),
           reserved = br.ReadUInt32(),
         };
+        if (item.overlayId == 0xffffffff) { break; }
         overlayTable.Add(item);
       }
 
@@ -71,11 +72,11 @@ namespace NitroHelper
       return overlays;
     }
 
-    public void WriteTo(string path, uint offset = 0) => WriteTo(true, File.Create(path), offset);
+    public uint WriteTo(string path, uint offset = 0) => WriteTo(true, File.Create(path), offset);
 
-    public void WriteTo(Stream stream, uint offset = 0) => WriteTo(false, stream, offset);
+    public uint WriteTo(Stream stream, uint offset = 0) => WriteTo(false, stream, offset);
 
-    private void WriteTo(bool close, Stream stream, uint offset = 0)
+    private uint WriteTo(bool close, Stream stream, uint offset = 0)
     {
       BinaryWriter bw = new BinaryWriter(stream);
       stream.Position = offset;
@@ -90,9 +91,12 @@ namespace NitroHelper
         bw.Write(item.fileId);
         bw.Write(item.reserved);
       }
+      uint size = (uint)(bw.BaseStream.Position - offset);
       bw.WritePadding(0x200);
 
       if (close) { stream.Close(); }
+
+      return size;
     }
 
     public override string ToString()
