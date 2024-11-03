@@ -128,6 +128,13 @@ namespace NitroHelper
 
     public void SaveAs(string outputPath)
     {
+      var outputStream = File.Create(outputPath);
+      SaveAs(outputStream);
+      outputStream.Close();
+    }
+
+    public void SaveAs(Stream outputStream)
+    {
       /* ROM sections:
        *
        * Header (0x0000-0x4000)
@@ -210,7 +217,6 @@ namespace NitroHelper
         header.gameCode = newHeader.gameCode;
       }
 
-      var outputStream = File.Create(outputPath);
       var originalStream = File.OpenRead(filePath);
       var or = new BinaryReader(originalStream);
       var bw = new BinaryWriter(outputStream);
@@ -320,7 +326,6 @@ namespace NitroHelper
       bw.Write(Enumerable.Repeat((byte)0xFF, (int)(header.size - header.ROMsize)).ToArray());
 
       originalStream.Close();
-      outputStream.Close();
     }
 
     void WriteFile(BinaryWriter bw, BinaryReader or, sFile file, bool writePadding = true)
