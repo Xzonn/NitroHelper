@@ -11,6 +11,26 @@ namespace NitroHelper
     public string name = "";
     public ushort id = 0xFFFF;
     public string path = "";
+    public Stream replaceStream = null;
+
+    public bool TryGetStream(out Stream output)
+    {
+      if (replaceStream is not null)
+      {
+        output = replaceStream;
+        return true;
+      }
+      else if (!string.IsNullOrEmpty(path))
+      {
+        output = File.OpenRead(path);
+        return true;
+      }
+      else
+      {
+        output = null;
+        return false;
+      }
+    }
 
     public string GetPath(string @default)
     {

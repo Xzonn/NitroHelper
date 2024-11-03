@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace NitroHelper
 {
@@ -175,9 +174,9 @@ namespace NitroHelper
       if (index != -1)
       {
         y9 = systemFiles[index];
-        if (y9.GetPath(filePath) != filePath)
+        if (y9.TryGetStream(out var stream))
         {
-          overlay9Table = new OverlayTable(y9.path, 0, y9.size, true);
+          overlay9Table = new OverlayTable(stream, 0, (uint)stream.Length, true);
         }
         ov9 = overlay.files.FindAll(sFile => sFile.name.StartsWith("overlay_"));
         ov9.Sort((sFile1, sFile2) => sFile1.id.CompareTo(sFile2.id));
@@ -195,9 +194,9 @@ namespace NitroHelper
       if (index != -1)
       {
         y7 = systemFiles[index];
-        if (y7.GetPath(filePath) != filePath)
+        if (y7.TryGetStream(out var stream))
         {
-          overlay7Table = new OverlayTable(y7.path, 0, y7.size, true);
+          overlay7Table = new OverlayTable(stream, 0, (uint)stream.Length, true);
         }
         ov7 = overlay.files.FindAll(sFile => sFile.name.StartsWith("overlay7_"));
         ov7.Sort((sFile1, sFile2) => sFile1.id.CompareTo(sFile2.id));
@@ -210,9 +209,9 @@ namespace NitroHelper
         }
       }
 
-      if (headerFile.GetPath(filePath) != filePath)
+      if (headerFile.TryGetStream(out var stream1))
       {
-        var newHeader = new Header(headerFile.path, headerFile.offset);
+        var newHeader = new Header(stream1);
         header.gameTitle = newHeader.gameTitle;
         header.gameCode = newHeader.gameCode;
       }
@@ -274,9 +273,9 @@ namespace NitroHelper
 
       // Write banner
       header.bannerOffset = (uint)bw.BaseStream.Position;
-      if (bannerFile.GetPath(filePath) != filePath)
+      if (bannerFile.TryGetStream(out var stream2))
       {
-        banner = new Banner(bannerFile.path, bannerFile.offset, header.banner_size);
+        banner = new Banner(stream2, 0, header.banner_size);
       }
       header.banner_size = banner.WriteTo(outputStream, header.bannerOffset);
 
@@ -331,14 +330,15 @@ namespace NitroHelper
     void WriteFile(BinaryWriter bw, BinaryReader or, sFile file, bool writePadding = true)
     {
       var reader = or;
-      if (file.GetPath(filePath) != filePath)
+      if (file.TryGetStream(out var stream))
       {
-        reader = new BinaryReader(File.OpenRead(file.path));
+        reader = new BinaryReader(stream);
       }
       reader.BaseStream.Position = file.offset;
       bw.Write(reader.ReadBytes((int)file.size));
       if (reader != or)
       {
+        stream.Close();
         reader.Close();
       }
 
