@@ -157,6 +157,7 @@ namespace NitroHelper
     private Header(bool close, Stream stream, uint offset = 0)
     {
       BinaryReader br = new BinaryReader(stream);
+      br.BaseStream.Position = offset;
 
       gameTitle = br.ReadChars(12);
       gameCode = br.ReadChars(4);
