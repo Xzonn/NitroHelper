@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>net47;net6.0</TargetFrameworks>
     <LangVersion>12.0</LangVersion>
-    <Version>0.12.1</Version>
-    <AssemblyVersion>0.12.1</AssemblyVersion>
-    <FileVersion>0.12.1</FileVersion>
+    <Version>0.12.3</Version>
+    <AssemblyVersion>0.12.3</AssemblyVersion>
+    <FileVersion>0.12.3</FileVersion>
     <Copyright>Copyright © Xzonn 2023-2025</Copyright>
     <DebugType>embedded</DebugType>
     <Title>NitroHelper</Title>
