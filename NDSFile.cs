@@ -322,7 +322,13 @@ namespace NitroHelper
       // Write header
       header.WriteTo(outputStream, 0);
       outputStream.Position = header.ROMsize;
-      bw.Write(Enumerable.Repeat((byte)0xFF, (int)(header.size - header.ROMsize)).ToArray());
+
+      // https://problemkaputt.de/gbatek-ds-wifi-nintendo-ds-download-play.htm
+      if (header.dlp_signature.Length == 0x88)
+      {
+        bw.Write(header.dlp_signature);
+      }
+      bw.Write(Enumerable.Repeat((byte)0xFF, (int)(header.size - outputStream.Position)).ToArray());
 
       originalStream.Close();
     }

@@ -150,6 +150,9 @@ namespace NitroHelper
     public readonly bool nitrocode;
     public readonly bool decrypted;
 
+    // https://problemkaputt.de/gbatek-ds-wifi-nintendo-ds-download-play.htm
+    public byte[] dlp_signature = new byte[0];
+
     public Header(string file, uint offset = 0) : this(true, File.OpenRead(file), offset) { }
 
     public Header(Stream stream, uint offset = 0) : this(false, stream, offset) { }
@@ -311,6 +314,22 @@ namespace NitroHelper
         byte[] secureArea = br.ReadBytes(0x4000);
         if (decrypted) { Arm9Encryptor.Encrypt(gameCode, ref secureArea); }
         secureCRC = CRC16.Calculate(secureArea) == secureCRC16;
+
+        br.BaseStream.Position = position;
+      }
+
+      if (ROMsize + 0x88 <= br.BaseStream.Length)
+      {
+        var position = br.BaseStream.Position;
+
+        br.BaseStream.Position = ROMsize;
+
+        uint magic = br.ReadUInt32();
+        if (magic == 0x00016361)
+        {
+          br.BaseStream.Position = ROMsize;
+          dlp_signature = br.ReadBytes(0x88);
+        }
 
         br.BaseStream.Position = position;
       }
